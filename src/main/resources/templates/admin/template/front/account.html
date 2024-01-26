@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html" class="h-100"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+      th:replace="~{fragment/sourceLayout :: layout(~{::title}, ~{::content})}">
+<title>Car Rent - Account Settings</title>
+<content>
+    <div class="row w-100">
+        <div class="col">
+            <div class="col p-3 text-center">
+                <h5 class="fw-bold">Account Settings</h5>
+                <div class="row w-auto justify-content-center"
+                     sec:authorize="hasRole('ROLE_APPROVED_CLIENT')">
+                    <h5 class="fw-bold border border-success rounded-3 bg-success w-auto">Your account is verified.</h5>
+                </div>
+                <div class="row w-auto justify-content-center"
+                     sec:authorize="hasRole('ROLE_CLIENT') && !hasRole('ROLE_APPROVED_CLIENT')">
+                    <h5 class="fw-bold border border-warning rounded-3 bg-warning w-auto">Upload documents and
+                        wait for account confirmation</h5>
+                </div>
+            </div>
+            <div th:text="${message}" class="text-center"></div>
+            <div class="col">
+                <form th:action="'/account'"
+                      enctype="multipart/form-data" th:method="POST" class="form-floating g-3">
+                    <div class="row mb-3 justify-content-center">
+                        <div class="col-md-2">
+                            <label for="name" class="ps-2">Name</label>
+                            <input type="text" class="form-control rounded-3" name="name" id="name" required
+                                   th:value="${personalityData.getName() != null} ? ${personalityData.getName()} : ''"
+                                   placeholder="Name">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="last_name" class="ps-2">LastName</label>
+                            <input type="text" name="lastName" class="form-control rounded-3" id="last_name" required
+                                   th:value="${personalityData.getLastName()!=null} ? ${personalityData.getLastName()} : ''"
+                                   placeholder="LastName">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="phone" class="ps-2">Phone</label>
+                            <input type="text" name="phone" class="form-control rounded-3" id="phone" required
+                                   th:value="${personalityData.getPhone() != null} ? ${personalityData.getPhone()} : ''"
+                                   placeholder="Phone">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 justify-content-center">
+                        <div class="col-md-3">
+                            <label for="passport_number" class="ps-2">Series and Passport Number</label>
+                            <input type="text" name="passportNumber" class="form-control rounded-3" id="passport_number"
+                                   required
+                                   th:value="${personalityData.getPassportNumber() != null} ? ${personalityData.getPassportNumber()} : ''"
+                                   placeholder="Series and Passport Number">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="photo_passport" class="ps-2">Photo of the first page of the passport</label>
+                            <input type="file" name="files" class="form-control rounded-3" id="photo_passport"
+                                   placeholder="Photo Passport">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 justify-content-center">
+                        <div class="col-md-3">
+                            <label for="driver_licence_number" class="ps-2">License Number</label>
+                            <input type="text" name="driverLicenseNumber" class="form-control rounded-3"
+                                   id="driver_licence_number"
+                                   required
+                                   th:value="${personalityData.getDriverLicenseNumber() != null} ? ${personalityData.getDriverLicenseNumber()} : ''"
+                                   placeholder="License Number">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="photo_driver_licence" class="ps-2">Photo of Driver License</label>
+                            <input type="file" name="files" class="form-control rounded-3" id="photo_driver_licence"
+                                   placeholder="Photo of Driver License">
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div th:each="photo : ${personalityData.getDocs()}" class="mb-3 me-3"
+                             style="max-width: 20rem">
+                            <img th:src="@{/account/personalData/{userId}/{fileName}(userId = ${personalityData.getUser().getId()}, fileName=${photo.getFileName()})}"
+                                 class="img-thumbnail" alt="">
+                        </div>
+                    </div>
+                    <div class="row mb-3 justify-content-center">
+                        <button type="submit" class="w-25 mb-2 btn btn-lg rounded-3 btn-warning">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="container p-3 text-center">
+                <h5 class="fw-bold">Your Orders</h5>
+                <div th:text="${message}" class="text-center"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <table class="table table-sm table-light table-striped table-hover border-bottom border-dark">
+                <thead>
+                <tr>
+                    <th scope="col">Automobile</th>
+                    <th scope="col">Client</th>
+                    <th scope="col">Car Delivery</th>
+                    <th scope="col">Renting a Car</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Payment</th>
+                </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                <tr th:each="order : ${ordersList}"
+                    class="small border-bottom border-dark"
+                    th:id="'order_' + ${order.getId()}">
+                    <td class="text-start">
+                        <h6 th:text="${order.getCar().getManufacturer()} + ' ' + ${order.getCar().getModel()} +', ' + ${order.getCar().getYear()}"></h6>
+                        <div class="row">
+                            <div class="col-md-auto">
+                                <img th:each="photo : ${order.getCar().getPhotos()}"
+                                     th:if="${photo.getCover()}"
+                                     th:src="@{/cars/{carId}/{fileName}(carId = ${order.getCar().getId()}, fileName='p_' + ${photo.getFileName()})}"
+                                     class="img-thumbnail" style="max-width: 100px; max-height: 100px" alt="">
+                            </div>
+                            <div class="col-md">
+                                <div th:text="${order.getCar().getPrice()}" class="fw-bold"></div>
+                                <div th:text="${order.getCar().getPlate()}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-start">
+                        <h6 th:text="
+                        ${order.getUser().getPersonalityData().getName()}
+                        + ' '
+                        + ${order.getUser().getPersonalityData().getPatronymic()}
+                        + ' '
+                        + ${order.getUser().getPersonalityData().getLastName()}">
+                        </h6>
+                        <div th:text="${order.getUser().getPersonalityData().getPhone()}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${#temporals.format(order.getStart(), 'HH:mm dd.MM.yyyy')}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${#temporals.format(order.getEnd(), 'HH:mm dd.MM.yyyy')}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${order.getStatus().getStatus()}"></div>
+                        <a th:href="'/order/cancel/' + ${order.getId()}"
+                           th:if="${order.getStatus()} == ${T(m7.only.carrental.entity.order.OrderStatus).PAID}
+                           OR
+                                  ${order.getStatus()} == ${T(m7.only.carrental.entity.order.OrderStatus).CREATED}"
+                           class="text-danger">Cancel</a>
+                    </td>
+                    <td>
+                        <h6 th:text="${order.getTotalPrice()}"></h6>
+                    </td>
+                    <td>
+                        <a th:href="'#order_' + ${order.getId()}">
+                            <button class="btn btn-success">Pay</button>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</content>
+</html>
